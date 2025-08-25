@@ -1,1 +1,1 @@
-rootProject.name = "4"
+rootProject.name = "AppNameFetcher"

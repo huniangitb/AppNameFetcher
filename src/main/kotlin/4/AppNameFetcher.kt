@@ -23,8 +23,6 @@ object AppNameFetcher {
 
         try {
             // Get system context via reflection, essential for app_process environment
-            // This reflective call ensures compatibility when running via app_process,
-            // as a standard Android application context is not directly available.
             val activityThreadClass = Class.forName("android.app.ActivityThread")
             val systemMainMethod = activityThreadClass.getMethod("systemMain")
             val activityThread = systemMainMethod.invoke(null)
