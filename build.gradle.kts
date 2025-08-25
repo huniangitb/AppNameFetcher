@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "${KOTLIN_VERSION}"
+    kotlin("jvm") version "1.9.22"
     // Apply the Java plugin to get the 'jar' task and standard configurations.
     id("java")
 }
