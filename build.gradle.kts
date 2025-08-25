@@ -1,9 +1,9 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import org.gradle.jvm.toolchain.JavaLanguageVersion // 导入 JavaLanguageVersion
+import org.gradle.jvm.toolchain.JavaLanguageVersion
 
 plugins {
     kotlin("jvm") version "1.9.22"
-    id("java") // 应用 Java 插件以获取 'jar' 任务
+    id("java")
 }
 
 group = "com.example.fetcher"
@@ -14,41 +14,48 @@ repositories {
     google()
 }
 
-// 检查 ANDROID_HOME 环境变量，以便找到 android.jar
 val androidHome = System.getenv("ANDROID_HOME")
 if (androidHome == null || androidHome.isBlank()) {
     throw GradleException("Error: ANDROID_HOME environment variable is not set. Please point it to your Android SDK location.")
 }
 
-// ===================================================================
-// 核心修复：使用 JVM Toolchain 确保 Java 和 Kotlin 的 JVM 目标版本一致
-// ===================================================================
 java {
     toolchain {
-        // 设置所有 Java 和 Kotlin 编译任务的目标 JVM 语言版本
-        // 推荐 11 (Android 11+兼容性好) 或 8 (最广泛兼容)。
-        // 这会覆盖 kotlinOptions.jvmTarget 的设置，并自动协调 compileJava。
-        languageVersion.set(JavaLanguageVersion.of(11))
+        languageVersion.set(JavaLanguageVersion.of(11)) // 保持 11，或根据需要改为 8
     }
 }
-// ===================================================================
 
 dependencies {
-    // Compile-only 依赖 Android 框架，用于编译时引用 Android API
-    // 运行时由设备提供，不会打包进 JAR
+    // Compile-only 依赖 Android 框架
     compileOnly(files("$androidHome/platforms/android-34/android.jar"))
+
+    // ===================================================================
+    // 重要：将 Kotlin 标准库声明为运行时依赖，以便打包进 Fat JAR
+    // ===================================================================
+    // 使用 implementation 确保 Kotlin 标准库会被打包进 JAR
+    // 或者如果你想更明确控制，可以定义一个 customRuntimeClasspath
+    implementation(kotlin("stdlib"))
+    // 确保你的所有其他 Kotlin 模块如果依赖了 Kotlin stdlib
+    // 也会被打包进来
+    // implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:${kotlin_version}") // 如果你明确使用 jdk8 版本
 }
 
-// 之前这里的 tasks.withType<KotlinCompile> 块可以删除了，
-// 因为 toolchain 已经统一处理了 JVM 目标版本。
-// 如果你想手动设置 JVM 目标，就不能用 toolchain，并且需要确保与 java.sourceCompatibility/targetCompatibility 一致。
-
 tasks.jar {
-    // 设置输出 JAR 文件的名称
     archiveBaseName.set("appnamefetcher")
     
-    // 配置 JAR 的 MANIFEST.MF 文件，指定主类
     manifest {
         attributes["Main-Class"] = "com.example.fetcher.AppNameFetcher"
     }
+
+    // ===================================================================
+    // 核心修改：将所有运行时依赖打包进 JAR 文件
+    // ===================================================================
+    // 从所有的运行时 classpath 中获取文件或 zip 文件并添加到当前 JAR
+    // 这会将 kotlin-stdlib 和其他任何 implementation 依赖打包进来
+    from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
+
+    // 排除 JAR 文件中可能重复的或不需要的 META-INF 文件
+    // (可选，但推荐，以避免JAR冲突)
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA", "META-INF/LICENSE*", "META-INF/NOTICE*")
 }
