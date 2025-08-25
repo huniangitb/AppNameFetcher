@@ -1,4 +1,4 @@
-package 4
+package com.example.fetcher
 
 import android.content.Context
 import android.content.pm.PackageManager

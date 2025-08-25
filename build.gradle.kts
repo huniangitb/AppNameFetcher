@@ -1,12 +1,14 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.9.22"
-    // Apply the Java plugin to get the 'jar' task and standard configurations.
+    // 硬编码 Kotlin 版本
+    kotlin("jvm") version "1.9.22" 
+    // 应用 Java 插件以获取 'jar' 任务
     id("java")
 }
 
-group = "${PACKAGE_NAME}"
+// 修改: 将 ${PACKAGE_NAME} 替换为实际的包名
+group = "com.example.fetcher"
 version = "1.0.0"
 
 repositories {
@@ -20,8 +22,8 @@ if (androidHome == null || androidHome.isBlank()) {
 }
 
 dependencies {
-    // Compile-only dependency on Android framework.
-    compileOnly(files("\$androidHome/platforms/android-${ANDROID_API_LEVEL}/android.jar"))
+    // 修改: 将 ${ANDROID_API_LEVEL} 替换为实际的 API Level
+    compileOnly(files("$androidHome/platforms/android-34/android.jar"))
 }
 
 tasks.withType<KotlinCompile> {
@@ -29,10 +31,11 @@ tasks.withType<KotlinCompile> {
 }
 
 tasks.jar {
-    // Set the output JAR file name for the built artifact.
-    archiveBaseName.set("${PROJECT_NAME.toLowerCase()}")
+    // 修改: 将 ${PROJECT_NAME} 替换为实际的项目名（小写）
+    archiveBaseName.set("appnamefetcher")
     
     manifest {
-        attributes["Main-Class"] = "${PACKAGE_NAME}.AppNameFetcher"
+        // 修改: 将 ${PACKAGE_NAME} 替换为实际的包名
+        attributes["Main-Class"] = "com.example.fetcher.AppNameFetcher"
     }
 }
